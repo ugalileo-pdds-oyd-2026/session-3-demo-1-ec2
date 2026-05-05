@@ -14,6 +14,8 @@ Thumbs.db
 
 # App
 /app/server
+/app/*.zip
+/app/bootstrap
 
 # Git keep
 !.gitkeep

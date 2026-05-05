@@ -12,5 +12,5 @@ import (
 // events into standard http.Request / http.ResponseWriter calls, so
 // buildHandler() in main.go requires zero changes for Lambda.
 func main() {
-	lambda.Start(httpadapter.NewV2(buildHandler()))
+	lambda.Start(httpadapter.NewV2(buildHandler()).ProxyWithContext)
 }
