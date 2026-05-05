@@ -1,0 +1,19 @@
+# Terraform files
+*.tfstate
+*.tfstate.backup
+.terraform
+.terraform/**
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# App
+/app/server
+
+# Git keep
+!.gitkeep
