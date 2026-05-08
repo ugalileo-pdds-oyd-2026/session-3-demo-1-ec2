@@ -19,3 +19,14 @@ variable "instance_type" {
   type        = string
   default     = "t4g.nano"
 }
+
+variable "app_s3_bucket" {
+  description = "S3 bucket containing the pre-compiled Go binary"
+  type        = string
+}
+
+variable "allowed_cidr_blocks" {
+  description = "CIDR blocks permitted to reach port 8080 on the instance"
+  type        = list(string)
+}
+
