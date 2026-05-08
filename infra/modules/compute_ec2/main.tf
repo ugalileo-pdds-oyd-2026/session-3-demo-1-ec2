@@ -63,6 +63,15 @@ resource "aws_instance" "this" {
   iam_instance_profile   = aws_iam_instance_profile.this.name
   vpc_security_group_ids = [aws_security_group.instance.id]
 
+  user_data = base64encode(<<-EOF
+    #!/bin/bash
+    yum update -y
+    aws s3 cp s3://${var.app_s3_bucket}/server /opt/server
+    chmod +x /opt/server
+    COMPUTE_TYPE=ec2 nohup /opt/server &
+  EOF
+  )
+
   tags = {
     Name        = "${var.name}-${var.environment}-ec2-instance"
     Environment = var.environment
