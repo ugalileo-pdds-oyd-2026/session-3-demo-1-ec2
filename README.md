@@ -245,6 +245,63 @@ terraform destroy -var-file=envs/dev/dev.tfvars
 
 ---
 
+## Next steps
+
+### GitHub Actions — CD pipeline
+
+The deployment steps above run manually. A push-to-`main` workflow automates the full cycle: build → upload → apply.
+
+```yaml
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-west-2
+      APP_S3_BUCKET: tito-terraform-demo-app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: app/go.mod
+
+      - name: Build
+        working-directory: app
+        run: GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o server .
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Upload binary
+        run: aws s3 cp app/server s3://${{ env.APP_S3_BUCKET }}/server
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform apply
+        working-directory: infra
+        run: terraform apply -auto-approve -var-file=envs/dev/dev.tfvars
+```
+
+A pull-request variant extends this by capturing the public IP from `terraform output` after apply and posting it as a PR comment — reviewers can hit the endpoint directly from the PR page without needing to find the address manually.
+
+### SSH access
+
+The module already creates the key pair (`aws_key_pair.ec2_key`) and the `key.pub` is committed. To enable SSH, two additions are needed:
+
+1. Add `key_name = aws_key_pair.ec2_key.key_name` to the `aws_instance` resource.
+2. Add a second ingress rule to the security group: port 22, TCP, from a restricted CIDR.
+
+Without step 2, the key pair exists in AWS but no inbound SSH traffic can reach the instance.
+
+---
+
 ## Key concepts summary
 
 | Concept | Why it matters |
